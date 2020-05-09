@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<title>Random Generate</title>
+		<meta name="viewport" content="width=device-width" />
+		<style type="text/css">
+			@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond&display=swap");
+			html {
+				overflow: hidden;
+				font: 3vw/1 "Cormorant Garamond", serif;
+				background: #33C;
+				color: #FC3;
+			}
+			body,
+			h1,
+			p {
+				margin: unset;
+			}
+			button {
+				padding: unset;
+				border: unset;
+				font: unset;
+				background: unset;
+				color: unset;
+				cursor: pointer;
+			}
+			button:focus,
+			button:hover {
+				outline: unset;
+			}
+			body {
+				display: flex;
+				width: 100vw;
+				height: 100vh;
+				text-align: center;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+			}
+			header,
+			footer {
+				flex: 0 0 auto;
+				letter-spacing: 0.1em;
+				color: #33C;
+			}
+			header:focus,
+			header:hover,
+			header::selection,
+			footer:focus,
+			footer:hover,
+			footer::selection {
+				color: white;
+			}
+			h1 {
+				font-size: unset;
+				font-family: "Arial", sans-serif;
+				transform: rotate(180deg);
+			}
+			main {
+				flex: 1 1 auto;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+			}
+			#rg {
+				font-size: 3em;
+				letter-spacing: 0.1em;
+			}
+			#tray {
+				font-size: 2em;
+			}
+			a {
+				color: unset;
+				text-decoration: unset;
+			}
+			@media (min-width: 768px) {
+				html {
+					font-size: 2vw;
+				}
+				#tray {
+					margin-top: 3em;
+					position: absolute;
+				}
+			}
+		</style>
+		<script type="application/javascript">
+			let words = [];
+			let firstNames = [];
+			let lastNames = [];
+			let isAccurate = location.search.includes("accurate=true");
+			let arrayRandom = (array) => array[Math.floor(Math.random() * array.length)];
+			let generateName = () => `${arrayRandom(firstNames)} ${arrayRandom(lastNames)}`;
+			let setRandomName = () => document.getElementById("rg").textContent = generateName();
+			(async () => {
+				// From https://github.com/dwyl/english-words
+				(await (await window.fetch("words_alpha.txt")).text()).split(/[\r\n]+/).forEach(line => {
+					if (line.match(/^[RG].*[^S]$/)) {
+						words.push(line.toUpperCase());
+					}
+				});
+				// From http://www.speech.cs.cmu.edu/cgi-bin/cmudict
+				(await (await window.fetch("cmudict-0.7b.txt")).text()).split(/[\r\n]+/).forEach(line => {
+					if (line.match(/^[RG].*[^S]$/)) {
+						[word, ...phonemes] = line.split(/\s+/);
+						if (words.includes(word)) {
+							let isR = phonemes[0] === "R";
+							let isG = phonemes[0] === "G";
+							let vowels = phonemes.filter(phoneme => phoneme.match(/\d$/));
+							if ((isR && vowels.length === (isAccurate ? 3 : 2)) || (isG && (vowels.length === 2 || vowels.length === 3))) {
+								let primaryStress = vowels.indexOf(vowels.filter(vowel => vowel.endsWith("1"))[0]);
+								if (isR && isAccurate && primaryStress === 1) {
+									firstNames.push(word);
+								} else if (isR && !isAccurate && primaryStress === 0) {
+									firstNames.push(word);
+								} else if (isG && primaryStress === 0 && vowels.length === 2) {
+									lastNames.push(`${word}MAN`);
+								} else if (isG && primaryStress === 0 && vowels.length === 3) {
+									lastNames.push(word)
+								}
+							}
+						}
+					}
+				});
+				setRandomName();
+			})();
+		</script>
+	</head>
+	<body>
+		<header>
+			<h1><a rel="external noopener" href="https://1d4chan.org/wiki/Roboute_Guilliman" target="_blank">&Omega;</a></h1>
+		</header>
+		<main>
+			<p id="rg">&nbsp;</p>
+			<p id="tray"><button onclick="setRandomName()">&#x21BA;</button></p>
+		</main>
+		<footer>
+			<a href="?accurate=true">ACKSHUALLY</a>
+		</footer>
+	</body>
+</html>
